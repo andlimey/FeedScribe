@@ -1,0 +1,42 @@
+name: Process Queue
+on:
+  push:
+    paths:
+      - 'queue.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install -e .
+      - name: Process queue
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
+        run: |
+          source .venv/bin/activate
+          while IFS= read -r url || [ -n "$url" ]; do
+            [[ -z "$url" || "$url" == \#* ]] && continue
+            feedscribe process "$url"
+          done < queue.txt
+      - name: Clear queue and commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo -n "" > queue.txt
+          git add queue.txt .feedscribe/processed.json
+          git commit -m "chore: clear queue and update state [skip ci]"
+          git push
