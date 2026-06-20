@@ -3,21 +3,21 @@
       xmlns:media="http://search.yahoo.com/mrss/"
       xmlns="http://www.w3.org/2005/Atom">
   <entry>
-    <yt:videoId>abc123</yt:videoId>
+    <yt:videoId>abc12345678</yt:videoId>
     <title>Test Episode One</title>
     <published>2026-06-19T10:00:00+00:00</published>
-    <link rel="alternate" href="https://www.youtube.com/watch?v=abc123"/>
+    <link rel="alternate" href="https://www.youtube.com/watch?v=abc12345678"/>
   </entry>
   <entry>
-    <yt:videoId>def456</yt:videoId>
+    <yt:videoId>def45678901</yt:videoId>
     <title>Test Episode Two</title>
     <published>2026-06-18T10:00:00+00:00</published>
-    <link rel="alternate" href="https://www.youtube.com/watch?v=def456"/>
+    <link rel="alternate" href="https://www.youtube.com/watch?v=def45678901"/>
   </entry>
   <entry>
-    <yt:videoId>ghi789</yt:videoId>
+    <yt:videoId>ghi78901234</yt:videoId>
     <title>Test Episode Three</title>
     <published>2026-06-17T10:00:00+00:00</published>
-    <link rel="alternate" href="https://www.youtube.com/watch?v=ghi789"/>
+    <link rel="alternate" href="https://www.youtube.com/watch?v=ghi78901234"/>
   </entry>
 </feed>
