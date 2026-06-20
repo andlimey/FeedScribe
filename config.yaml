@@ -1,0 +1,20 @@
+channels:
+  - url: https://www.youtube.com/@rationalreminder/videos
+    name: rational_reminder
+    type: youtube
+  - url: https://www.youtube.com/@pragmaticengineer/videos
+    name: pragmatic_engineer
+    type: youtube
+
+llm:
+  provider: gemini
+  model: gemini-2.5-flash
+
+notifier:
+  provider: email
+
+polling:
+  max_videos_per_poll: 5
+
+state:
+  path: .feedscribe/processed.json
