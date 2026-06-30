@@ -3,6 +3,7 @@ from unittest.mock import patch
 from feedscribe.transcripts.youtube import YouTubeTranscriber
 from feedscribe.models import ContentItem
 from datetime import datetime, timezone
+from youtube_transcript_api import FetchedTranscriptSnippet
 
 
 @pytest.fixture
@@ -19,8 +20,8 @@ def item():
 
 def test_fetch_joins_segments(item):
     segments = [
-        {"text": "Hello world", "start": 0.0, "duration": 1.0},
-        {"text": "how are you", "start": 1.0, "duration": 1.0},
+        FetchedTranscriptSnippet(text="Hello world", start=0.0, duration=1.0),
+        FetchedTranscriptSnippet(text="how are you", start=1.0, duration=1.0),
     ]
     with patch(
         "youtube_transcript_api.YouTubeTranscriptApi.fetch",
@@ -36,7 +37,7 @@ def test_fetch_joins_segments(item):
 def test_fetch_returns_correct_content_id(item):
     with patch(
         "youtube_transcript_api.YouTubeTranscriptApi.fetch",
-        return_value=[{"text": "Test", "start": 0.0, "duration": 1.0}],
+        return_value=[FetchedTranscriptSnippet(text="Test", start=0.0, duration=1.0)],
     ):
         transcriber = YouTubeTranscriber()
         transcript = transcriber.fetch(item)
