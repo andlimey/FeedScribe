@@ -16,7 +16,8 @@ dependencies = [
     "youtube-transcript-api>=0.6",
     "google-genai>=1.0",
     "resend>=2.0",
-    "Markdown>=3.5",
+    "markdown-it-py>=3.0",
+    "linkify-it-py>=2.0",
 ]
 
 [project.optional-dependencies]

@@ -1,3 +1,4 @@
+import base64
 import pytest
 from unittest.mock import patch
 
@@ -49,7 +50,7 @@ def test_recipient(notifier, item, notes):
         notifier.send(item, notes)
 
     call_args = mock_send.call_args[0][0]
-    assert call_args["to"] == "to@example.com"
+    assert call_args["to"] == ["to@example.com"]
     assert call_args["from"] == "from@example.com"
 
 
@@ -70,13 +71,13 @@ def test_attachment_filename(notifier, item, notes):
     assert attachments[0]["filename"] == "rational_reminder_why_you_should_index.md"
 
 
-def test_attachment_content_is_bytes(notifier, item, notes):
+def test_attachment_content_is_base64(notifier, item, notes):
     with patch("resend.Emails.send") as mock_send:
         notifier.send(item, notes)
 
     content = mock_send.call_args[0][0]["attachments"][0]["content"]
-    assert isinstance(content, list)
-    assert content == list(notes.markdown.encode("utf-8"))
+    expected = base64.b64encode(notes.markdown.encode("utf-8")).decode("ascii")
+    assert content == expected
 
 
 def test_channel_name_title_cased_in_subject(notifier, item, notes):
