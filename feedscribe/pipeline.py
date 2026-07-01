@@ -1,19 +1,19 @@
 from feedscribe.config import AppConfig
-from feedscribe.llm.base import LLMProvider
+from feedscribe.llm.gemini import GeminiProvider
 from feedscribe.models import ContentItem
-from feedscribe.notifiers.base import Notifier
-from feedscribe.sources.base import ContentSource
+from feedscribe.notifiers.email import EmailNotifier
+from feedscribe.sources.youtube import YouTubeSource
 from feedscribe.state import StateStore
-from feedscribe.transcripts.base import Transcriber
+from feedscribe.transcripts.youtube import YouTubeTranscriber
 
 
 class Pipeline:
     def __init__(
         self,
-        source: ContentSource,
-        transcriber: Transcriber,
-        llm: LLMProvider,
-        notifier: Notifier,
+        source: YouTubeSource,
+        transcriber: YouTubeTranscriber,
+        llm: GeminiProvider,
+        notifier: EmailNotifier,
         state: StateStore,
     ) -> None:
         self._source = source

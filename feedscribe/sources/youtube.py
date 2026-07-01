@@ -6,7 +6,7 @@ import feedparser
 
 from feedscribe.config import ChannelConfig
 from feedscribe.models import ContentItem
-from feedscribe.sources.base import ContentSource
+from feedscribe.utils import to_snake
 
 
 def _extract_video_id(url_or_id: str) -> str:
@@ -21,12 +21,7 @@ def _extract_video_id(url_or_id: str) -> str:
     raise ValueError(f"Could not extract video ID from: {url_or_id}")
 
 
-def _to_snake(text: str) -> str:
-    text = re.sub(r"[^\w\s]", "", text.lower())
-    return re.sub(r"\s+", "_", text.strip())
-
-
-class YouTubeSource(ContentSource):
+class YouTubeSource:
     def _resolve_channel_id(self, channel_url: str) -> str:
         result = subprocess.run(
             ["yt-dlp", "--print", "channel_id", "--playlist-end", "1", channel_url],
@@ -72,6 +67,6 @@ class YouTubeSource(ContentSource):
             title=title,
             url=url,
             source="youtube",
-            channel=_to_snake(channel),
+            channel=to_snake(channel),
             published_at=datetime.now(timezone.utc),
         )

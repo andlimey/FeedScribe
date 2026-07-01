@@ -5,7 +5,6 @@ import resend
 from markdown_it import MarkdownIt
 
 from feedscribe.models import ContentItem, Notes
-from feedscribe.notifiers.base import Notifier
 
 
 def _channel_display(channel: str) -> str:
@@ -53,7 +52,7 @@ def _build_html_email(notes: Notes) -> str:
 </html>"""
 
 
-class EmailNotifier(Notifier):
+class EmailNotifier:
     def __init__(self, api_key: str, from_email: str, to_email: str) -> None:
         resend.api_key = api_key
         self._from_email = from_email

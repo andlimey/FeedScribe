@@ -2,7 +2,8 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from feedscribe.llm.gemini import GeminiProvider, _title_to_snake
+from feedscribe.llm.gemini import GeminiProvider
+from feedscribe.utils import to_snake
 from feedscribe.models import ContentItem, Transcript
 from datetime import datetime, timezone
 
@@ -65,12 +66,12 @@ def test_generate_notes_filename(item, transcript):
 
 
 def test_title_to_snake_basic():
-    assert _title_to_snake("Why You Should Index") == "why_you_should_index"
+    assert to_snake("Why You Should Index") == "why_you_should_index"
 
 
 def test_title_to_snake_punctuation():
-    assert _title_to_snake("Personal Finance 101!") == "personal_finance_101"
+    assert to_snake("Personal Finance 101!") == "personal_finance_101"
 
 
 def test_title_to_snake_extra_spaces():
-    assert _title_to_snake("  Hello   World  ") == "hello_world"
+    assert to_snake("  Hello   World  ") == "hello_world"

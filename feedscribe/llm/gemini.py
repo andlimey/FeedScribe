@@ -1,10 +1,7 @@
-import re
-from datetime import date
-
 from google import genai
 
-from feedscribe.llm.base import LLMProvider
 from feedscribe.models import ContentItem, Notes, Transcript
+from feedscribe.utils import to_snake
 
 _PROMPT = """\
 You are a research assistant. Generate structured notes from the following YouTube video transcript.
@@ -47,23 +44,18 @@ Output only the Markdown document, nothing else.\
 """
 
 
-def _title_to_snake(title: str) -> str:
-    title = re.sub(r"[^\w\s]", "", title.lower())
-    return re.sub(r"\s+", "_", title.strip())
-
-
-class GeminiProvider(LLMProvider):
+class GeminiProvider:
     def __init__(self, api_key: str, model: str = "gemini-2.5-flash") -> None:
         self._client = genai.Client(api_key=api_key)
         self._model = model
 
     def generate_notes(self, item: ContentItem, transcript: Transcript) -> Notes:
-        today = date.today().isoformat()
+        pub_date = item.published_at.date().isoformat()
         prompt = _PROMPT.format(
             title=item.title,
             channel=item.channel,
             url=item.url,
-            date=today,
+            date=pub_date,
             transcript=transcript.text,
         )
         response = self._client.models.generate_content(
@@ -71,5 +63,5 @@ class GeminiProvider(LLMProvider):
             contents=prompt,
         )
         markdown = response.text.strip()
-        filename = f"{item.channel}_{_title_to_snake(item.title)}.md"
+        filename = f"{item.channel}_{to_snake(item.title)}.md"
         return Notes(content_id=item.id, filename=filename, markdown=markdown)
