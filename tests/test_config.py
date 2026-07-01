@@ -14,8 +14,10 @@ channels:
     type: youtube
 
 llm:
-  provider: gemini
-  model: gemini-2.5-flash
+  provider: openrouter
+  models:
+    - google/gemma-4-31b-it:free
+    - google/gemini-2.5-flash-lite
 
 notifier:
   provider: email
@@ -32,7 +34,7 @@ state:
     assert isinstance(config, AppConfig)
     assert len(config.channels) == 1
     assert config.channels[0].name == "test_channel"
-    assert config.llm.model == "gemini-2.5-flash"
+    assert config.llm.models == ["google/gemma-4-31b-it:free", "google/gemini-2.5-flash-lite"]
     assert config.polling.max_videos_per_poll == 3
     assert config.state.path == ".feedscribe/processed.json"
 
@@ -43,8 +45,9 @@ def test_polling_defaults_to_5(tmp_path):
         """
 channels: []
 llm:
-  provider: gemini
-  model: gemini-2.5-flash
+  provider: openrouter
+  models:
+    - google/gemma-4-31b-it:free
 notifier:
   provider: email
 """

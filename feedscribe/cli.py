@@ -6,7 +6,7 @@ import click
 from dotenv import load_dotenv
 
 from feedscribe.config import AppConfig, load_config
-from feedscribe.llm.gemini import GeminiProvider
+from feedscribe.llm.openrouter import OpenRouterProvider
 from feedscribe.notifiers.email import EmailNotifier
 from feedscribe.pipeline import Pipeline
 from feedscribe.sources.youtube import YouTubeSource
@@ -20,9 +20,9 @@ def _build_pipeline(config_path: str = "config.yaml") -> tuple[Pipeline, AppConf
     state = JsonStateStore(config.state.path)
     source = YouTubeSource()
     transcriber = YouTubeTranscriber()
-    llm = GeminiProvider(
-        api_key=os.environ["GEMINI_API_KEY"],
-        model=config.llm.model,
+    llm = OpenRouterProvider(
+        api_key=os.environ["OPENROUTER_API_KEY"],
+        models=config.llm.models,
     )
     notifier = EmailNotifier(
         api_key=os.environ["RESEND_API_KEY"],

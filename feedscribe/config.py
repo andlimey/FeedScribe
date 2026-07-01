@@ -10,7 +10,7 @@ class ChannelConfig(BaseModel):
 
 class LLMConfig(BaseModel):
     provider: str
-    model: str
+    models: list[str]
 
 
 class NotifierConfig(BaseModel):

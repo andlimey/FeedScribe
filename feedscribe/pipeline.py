@@ -1,5 +1,5 @@
 from feedscribe.config import AppConfig
-from feedscribe.llm.gemini import GeminiProvider
+from feedscribe.llm.openrouter import OpenRouterProvider
 from feedscribe.models import ContentItem
 from feedscribe.notifiers.email import EmailNotifier
 from feedscribe.sources.youtube import YouTubeSource
@@ -12,7 +12,7 @@ class Pipeline:
         self,
         source: YouTubeSource,
         transcriber: YouTubeTranscriber,
-        llm: GeminiProvider,
+        llm: OpenRouterProvider,
         notifier: EmailNotifier,
         state: JsonStateStore,
     ) -> None:

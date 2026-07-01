@@ -43,7 +43,7 @@ def app_config():
                 type="youtube",
             )
         ],
-        llm=LLMConfig(provider="gemini", model="gemini-2.5-flash"),
+        llm=LLMConfig(provider="openrouter", models=["google/gemma-4-31b-it:free", "google/gemini-2.5-flash-lite"]),
         notifier=NotifierConfig(provider="email"),
     )
 

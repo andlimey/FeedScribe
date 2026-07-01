@@ -1,13 +1,16 @@
-import pytest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from feedscribe.llm.gemini import GeminiProvider
-from feedscribe.utils import to_snake
+import pytest
+
+from feedscribe.llm.openrouter import OpenRouterProvider
 from feedscribe.models import ContentItem, Transcript
-from datetime import datetime, timezone
+from feedscribe.utils import to_snake
 
 SAMPLE_MARKDOWN = (Path(__file__).parent.parent / "fixtures" / "notes.md").read_text()
+
+MODELS = ["google/gemma-4-31b-it:free", "google/gemini-2.5-flash-lite"]
 
 
 @pytest.fixture
@@ -27,27 +30,31 @@ def transcript():
     return Transcript(content_id="abc123", text="This is the transcript text.")
 
 
-def _make_gemini_mock(markdown: str):
+def _make_openai_mock(markdown: str):
+    mock_message = MagicMock()
+    mock_message.content = markdown
+    mock_choice = MagicMock()
+    mock_choice.message = mock_message
     mock_response = MagicMock()
-    mock_response.text = markdown
+    mock_response.choices = [mock_choice]
     mock_client = MagicMock()
-    mock_client.models.generate_content.return_value = mock_response
+    mock_client.chat.completions.create.return_value = mock_response
     return mock_client
 
 
 def test_generate_notes_returns_correct_content_id(item, transcript):
-    mock_client = _make_gemini_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.gemini.genai.Client", return_value=mock_client):
-        provider = GeminiProvider(api_key="test-key", model="gemini-2.5-flash")
+    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+        provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
     assert notes.content_id == "abc123"
 
 
 def test_generate_notes_markdown_contains_sections(item, transcript):
-    mock_client = _make_gemini_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.gemini.genai.Client", return_value=mock_client):
-        provider = GeminiProvider(api_key="test-key", model="gemini-2.5-flash")
+    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+        provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
     assert "---" in notes.markdown
@@ -57,12 +64,22 @@ def test_generate_notes_markdown_contains_sections(item, transcript):
 
 
 def test_generate_notes_filename(item, transcript):
-    mock_client = _make_gemini_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.gemini.genai.Client", return_value=mock_client):
-        provider = GeminiProvider(api_key="test-key", model="gemini-2.5-flash")
+    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+        provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
     assert notes.filename == "test_channel_why_you_should_index.md"
+
+
+def test_generate_notes_passes_models_for_fallback(item, transcript):
+    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+        provider = OpenRouterProvider(api_key="test-key", models=MODELS)
+        provider.generate_notes(item, transcript)
+
+    call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+    assert call_kwargs["extra_body"]["models"] == MODELS
 
 
 def test_title_to_snake_basic():

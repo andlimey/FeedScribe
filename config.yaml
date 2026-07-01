@@ -7,8 +7,10 @@ channels:
     type: youtube
 
 llm:
-  provider: gemini
-  model: gemini-2.5-flash
+  provider: openrouter
+  models:
+    - google/gemma-4-31b-it:free
+    - google/gemini-2.5-flash-lite
 
 notifier:
   provider: email
