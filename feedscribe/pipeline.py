@@ -3,7 +3,7 @@ from feedscribe.llm.gemini import GeminiProvider
 from feedscribe.models import ContentItem
 from feedscribe.notifiers.email import EmailNotifier
 from feedscribe.sources.youtube import YouTubeSource
-from feedscribe.state import StateStore
+from feedscribe.state import JsonStateStore
 from feedscribe.transcripts.youtube import YouTubeTranscriber
 
 
@@ -14,7 +14,7 @@ class Pipeline:
         transcriber: YouTubeTranscriber,
         llm: GeminiProvider,
         notifier: EmailNotifier,
-        state: StateStore,
+        state: JsonStateStore,
     ) -> None:
         self._source = source
         self._transcriber = transcriber

@@ -1,23 +1,11 @@
 import json
-from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from pathlib import Path
 
 from feedscribe.models import ContentItem
 
 
-class StateStore(ABC):
-    @abstractmethod
-    def is_processed(self, content_id: str) -> bool: ...
-
-    @abstractmethod
-    def mark_processed(self, item: ContentItem) -> None: ...
-
-    @abstractmethod
-    def list_processed(self) -> list[dict]: ...
-
-
-class JsonStateStore(StateStore):
+class JsonStateStore:
     def __init__(self, path: str) -> None:
         self._path = Path(path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
