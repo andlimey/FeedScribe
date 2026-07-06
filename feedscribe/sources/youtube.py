@@ -21,15 +21,20 @@ def _extract_video_id(url_or_id: str) -> str:
     raise ValueError(f"Could not extract video ID from: {url_or_id}")
 
 
+def _run_yt_dlp(args: list[str]) -> str:
+    result = subprocess.run(
+        ["yt-dlp", *args],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"yt-dlp failed (exit {result.returncode}): {result.stderr.strip()}")
+    return result.stdout.strip()
+
+
 class YouTubeSource:
     def _resolve_channel_id(self, channel_url: str) -> str:
-        result = subprocess.run(
-            ["yt-dlp", "--print", "channel_id", "--playlist-end", "1", channel_url],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        return result.stdout.strip()
+        return _run_yt_dlp(["--print", "channel_id", "--playlist-end", "1", channel_url])
 
     def fetch_recent(self, channel_cfg: ChannelConfig, max_items: int) -> list[ContentItem]:
         channel_id = self._resolve_channel_id(channel_cfg.url)
@@ -54,13 +59,8 @@ class YouTubeSource:
     def fetch_by_url(self, url_or_id: str) -> ContentItem:
         video_id = _extract_video_id(url_or_id)
         url = f"https://www.youtube.com/watch?v={video_id}"
-        result = subprocess.run(
-            ["yt-dlp", "--print", "%(title)s\t%(channel)s", "--no-download", url],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        parts = result.stdout.strip().split("\t")
+        stdout = _run_yt_dlp(["--print", "%(title)s\t%(channel)s", "--no-download", url])
+        parts = stdout.split("\t")
         title, channel = parts[0], parts[1]
         return ContentItem(
             id=video_id,
