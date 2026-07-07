@@ -35,6 +35,7 @@ Add these to `.env` for local use, and as GitHub repository secrets for the work
 | `RESEND_API_KEY` | Resend email API key |
 | `RESEND_FROM_EMAIL` | Sender address (e.g. `feedscribe@yourdomain.com`) |
 | `RESEND_TO_EMAIL` | Recipient address |
+| `YOUTUBE_API_KEY` | YouTube Data API v3 key — create a Google Cloud project, enable "YouTube Data API v3", and generate an API key (free, 10,000 units/day) |
 
 ## Configuration
 
@@ -83,7 +84,7 @@ Two workflows are included:
 - **`poll.yml`** — runs Mon & Fri at 1am UTC (also triggerable manually via `workflow_dispatch`). Processes new videos from all configured channels and commits updated state.
 - **`process.yml`** — triggers on any push that modifies `queue.txt`. Processes all URLs in the queue, then clears the file and commits in a single `[skip ci]` commit.
 
-Both workflows require the 4 environment variables above to be set as GitHub repository secrets (`Settings → Secrets and variables → Actions`).
+Both workflows require the 5 environment variables above to be set as GitHub repository secrets (`Settings → Secrets and variables → Actions`).
 
 ## Generated notes format
 

@@ -1,5 +1,8 @@
+import json
 import re
-import subprocess
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 
 import feedparser
@@ -7,6 +10,8 @@ import feedparser
 from feedscribe.config import ChannelConfig
 from feedscribe.models import ContentItem
 from feedscribe.utils import to_snake
+
+API_BASE = "https://www.googleapis.com/youtube/v3"
 
 
 def _extract_video_id(url_or_id: str) -> str:
@@ -21,20 +26,34 @@ def _extract_video_id(url_or_id: str) -> str:
     raise ValueError(f"Could not extract video ID from: {url_or_id}")
 
 
-def _run_yt_dlp(args: list[str]) -> str:
-    result = subprocess.run(
-        ["yt-dlp", *args],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"yt-dlp failed (exit {result.returncode}): {result.stderr.strip()}")
-    return result.stdout.strip()
-
-
 class YouTubeSource:
+    def __init__(self, api_key: str):
+        self._api_key = api_key
+
+    def _api_get(self, endpoint: str, params: dict) -> dict:
+        query = urllib.parse.urlencode({**params, "key": self._api_key})
+        url = f"{API_BASE}/{endpoint}?{query}"
+        try:
+            with urllib.request.urlopen(url) as response:
+                return json.loads(response.read())
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"YouTube API request failed (HTTP {e.code}): {e.read().decode()}")
+
     def _resolve_channel_id(self, channel_url: str) -> str:
-        return _run_yt_dlp(["--print", "channel_id", "--playlist-end", "1", channel_url])
+        match = re.search(r"/channel/(UC[\w-]+)", channel_url)
+        if match:
+            return match.group(1)
+
+        handle_match = re.search(r"/(@[\w.-]+)", channel_url)
+        if not handle_match:
+            raise ValueError(f"Could not extract channel handle from: {channel_url}")
+        handle = handle_match.group(1)
+
+        data = self._api_get("channels", {"part": "id", "forHandle": handle})
+        items = data.get("items", [])
+        if not items:
+            raise RuntimeError(f"No YouTube channel found for handle: {handle}")
+        return items[0]["id"]
 
     def fetch_recent(self, channel_cfg: ChannelConfig, max_items: int) -> list[ContentItem]:
         channel_id = self._resolve_channel_id(channel_cfg.url)
@@ -59,14 +78,18 @@ class YouTubeSource:
     def fetch_by_url(self, url_or_id: str) -> ContentItem:
         video_id = _extract_video_id(url_or_id)
         url = f"https://www.youtube.com/watch?v={video_id}"
-        stdout = _run_yt_dlp(["--print", "%(title)s\t%(channel)s", "--no-download", url])
-        parts = stdout.split("\t")
-        title, channel = parts[0], parts[1]
+
+        data = self._api_get("videos", {"part": "snippet", "id": video_id})
+        items = data.get("items", [])
+        if not items:
+            raise RuntimeError(f"No YouTube video found for ID: {video_id}")
+        snippet = items[0]["snippet"]
+
         return ContentItem(
             id=video_id,
-            title=title,
+            title=snippet["title"],
             url=url,
             source="youtube",
-            channel=to_snake(channel),
+            channel=to_snake(snippet["channelTitle"]),
             published_at=datetime.now(timezone.utc),
         )

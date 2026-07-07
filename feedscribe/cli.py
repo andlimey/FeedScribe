@@ -18,7 +18,7 @@ def _build_pipeline(config_path: str = "config.yaml") -> tuple[Pipeline, AppConf
     load_dotenv()
     config = load_config(config_path)
     state = JsonStateStore(config.state.path)
-    source = YouTubeSource()
+    source = YouTubeSource(api_key=os.environ["YOUTUBE_API_KEY"])
     transcriber = YouTubeTranscriber()
     llm = OpenRouterProvider(
         api_key=os.environ["OPENROUTER_API_KEY"],

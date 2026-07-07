@@ -15,7 +15,7 @@ def channel_cfg():
 
 @pytest.fixture
 def source():
-    return YouTubeSource()
+    return YouTubeSource(api_key="test-key")
 
 
 def _make_feed_mock():
@@ -58,12 +58,14 @@ def test_fetch_recent_respects_max_items(source, channel_cfg):
     assert items[1].id == "def45678901"
 
 
+def _make_video_snippet(title: str, channel_title: str) -> dict:
+    return {"items": [{"snippet": {"title": title, "channelTitle": channel_title}}]}
+
+
 def test_fetch_by_url_full_url(source):
-    with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(
-            stdout="Why You Should Index\tRational Reminder\n",
-            returncode=0,
-        )
+    with patch.object(
+        source, "_api_get", return_value=_make_video_snippet("Why You Should Index", "Rational Reminder")
+    ):
         item = source.fetch_by_url("https://www.youtube.com/watch?v=abc12345678")
 
     assert item.id == "abc12345678"
@@ -74,11 +76,7 @@ def test_fetch_by_url_full_url(source):
 
 
 def test_fetch_by_url_bare_id(source):
-    with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(
-            stdout="Test Title\tTest Channel\n",
-            returncode=0,
-        )
+    with patch.object(source, "_api_get", return_value=_make_video_snippet("Test Title", "Test Channel")):
         item = source.fetch_by_url("abc12345678")
 
     assert item.id == "abc12345678"
@@ -86,11 +84,23 @@ def test_fetch_by_url_bare_id(source):
 
 
 def test_fetch_by_url_short_url(source):
-    with patch("subprocess.run") as mock_run:
-        mock_run.return_value = MagicMock(
-            stdout="Test Title\tTest Channel\n",
-            returncode=0,
-        )
+    with patch.object(source, "_api_get", return_value=_make_video_snippet("Test Title", "Test Channel")):
         item = source.fetch_by_url("https://youtu.be/abc12345678")
 
     assert item.id == "abc12345678"
+
+
+def test_resolve_channel_id_from_channel_url(source):
+    with patch.object(source, "_api_get") as mock_api_get:
+        channel_id = source._resolve_channel_id("https://www.youtube.com/channel/UCabc123def456/videos")
+
+    mock_api_get.assert_not_called()
+    assert channel_id == "UCabc123def456"
+
+
+def test_resolve_channel_id_from_handle_url(source):
+    with patch.object(source, "_api_get", return_value={"items": [{"id": "UCtest123"}]}) as mock_api_get:
+        channel_id = source._resolve_channel_id("https://www.youtube.com/@testchannel/videos")
+
+    mock_api_get.assert_called_once_with("channels", {"part": "id", "forHandle": "@testchannel"})
+    assert channel_id == "UCtest123"
