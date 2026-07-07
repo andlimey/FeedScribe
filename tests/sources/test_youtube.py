@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch
-from feedscribe.sources.youtube import YouTubeSource
+from feedscribe.sources.youtube import YouTubeSource, _parse_duration_seconds, PLAYLIST_FETCH_LIMIT
 from feedscribe.config import ChannelConfig
 
 
@@ -37,13 +37,32 @@ def _make_playlist_items():
     }
 
 
+def _make_content_details(durations: dict) -> dict:
+    return {
+        "items": [
+            {"id": video_id, "contentDetails": {"duration": duration}}
+            for video_id, duration in durations.items()
+        ]
+    }
+
+
+_LONG_FORM_DURATIONS = {
+    "abc12345678": "PT5M0S",
+    "def45678901": "PT5M0S",
+    "ghi78901234": "PT5M0S",
+}
+
+
 def test_fetch_recent_returns_content_items(source, channel_cfg):
     with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
-         patch.object(source, "_api_get", return_value=_make_playlist_items()) as mock_api_get:
+         patch.object(
+             source, "_api_get",
+             side_effect=[_make_playlist_items(), _make_content_details(_LONG_FORM_DURATIONS)],
+         ) as mock_api_get:
         items = source.fetch_recent(channel_cfg, max_items=5)
 
-    mock_api_get.assert_called_once_with(
-        "playlistItems", {"part": "snippet", "playlistId": "UUtest123", "maxResults": 5}
+    mock_api_get.assert_any_call(
+        "playlistItems", {"part": "snippet", "playlistId": "UUtest123", "maxResults": PLAYLIST_FETCH_LIMIT}
     )
     assert len(items) == 3
     assert items[0].id == "abc12345678"
@@ -53,14 +72,70 @@ def test_fetch_recent_returns_content_items(source, channel_cfg):
     assert items[0].url == "https://www.youtube.com/watch?v=abc12345678"
 
 
-def test_fetch_recent_passes_max_items_to_api(source, channel_cfg):
+def test_fetch_recent_requests_full_playlist_page_regardless_of_max_items(source, channel_cfg):
     with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
-         patch.object(source, "_api_get", return_value=_make_playlist_items()) as mock_api_get:
+         patch.object(
+             source, "_api_get",
+             side_effect=[_make_playlist_items(), _make_content_details(_LONG_FORM_DURATIONS)],
+         ) as mock_api_get:
         source.fetch_recent(channel_cfg, max_items=2)
 
-    mock_api_get.assert_called_once_with(
-        "playlistItems", {"part": "snippet", "playlistId": "UUtest123", "maxResults": 2}
+    mock_api_get.assert_any_call(
+        "playlistItems", {"part": "snippet", "playlistId": "UUtest123", "maxResults": PLAYLIST_FETCH_LIMIT}
     )
+
+
+def test_fetch_recent_truncates_result_to_max_items(source, channel_cfg):
+    with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
+         patch.object(
+             source, "_api_get",
+             side_effect=[_make_playlist_items(), _make_content_details(_LONG_FORM_DURATIONS)],
+         ):
+        items = source.fetch_recent(channel_cfg, max_items=2)
+
+    assert len(items) == 2
+    assert [item.id for item in items] == ["abc12345678", "def45678901"]
+
+
+def test_fetch_recent_filters_out_shorts(source, channel_cfg):
+    durations = {
+        "abc12345678": "PT45S",  # Short - excluded
+        "def45678901": "PT5M0S",  # long-form - kept
+        "ghi78901234": "PT45S",  # Short - excluded
+    }
+    with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
+         patch.object(
+             source, "_api_get",
+             side_effect=[_make_playlist_items(), _make_content_details(durations)],
+         ):
+        items = source.fetch_recent(channel_cfg, max_items=5)
+
+    assert [item.id for item in items] == ["def45678901"]
+
+
+def test_fetch_recent_excludes_video_at_exact_shorts_boundary(source, channel_cfg):
+    durations = {**_LONG_FORM_DURATIONS, "abc12345678": "PT3M0S"}
+    with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
+         patch.object(
+             source, "_api_get",
+             side_effect=[_make_playlist_items(), _make_content_details(durations)],
+         ):
+        items = source.fetch_recent(channel_cfg, max_items=5)
+
+    assert "abc12345678" not in [item.id for item in items]
+
+
+def test_fetch_recent_skips_video_missing_from_content_details(source, channel_cfg):
+    durations = {k: v for k, v in _LONG_FORM_DURATIONS.items() if k != "abc12345678"}
+    with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
+         patch.object(
+             source, "_api_get",
+             side_effect=[_make_playlist_items(), _make_content_details(durations)],
+         ):
+        items = source.fetch_recent(channel_cfg, max_items=5)
+
+    assert "abc12345678" not in [item.id for item in items]
+    assert len(items) == 2
 
 
 def _make_video_snippet(title: str, channel_title: str) -> dict:
@@ -109,3 +184,21 @@ def test_resolve_channel_id_from_handle_url(source):
 
     mock_api_get.assert_called_once_with("channels", {"part": "id", "forHandle": "@testchannel"})
     assert channel_id == "UCtest123"
+
+
+@pytest.mark.parametrize(
+    "duration,expected_seconds",
+    [
+        ("PT45S", 45),
+        ("PT3M1S", 181),
+        ("PT3M", 180),
+        ("PT1H2M3S", 3723),
+    ],
+)
+def test_parse_duration_seconds(duration, expected_seconds):
+    assert _parse_duration_seconds(duration) == expected_seconds
+
+
+def test_parse_duration_seconds_rejects_invalid_string():
+    with pytest.raises(ValueError):
+        _parse_duration_seconds("not-a-duration")

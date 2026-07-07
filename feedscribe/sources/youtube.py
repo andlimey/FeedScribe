@@ -11,6 +11,11 @@ from feedscribe.utils import to_snake
 
 API_BASE = "https://www.googleapis.com/youtube/v3"
 
+SHORTS_MAX_DURATION_SECONDS = 180
+PLAYLIST_FETCH_LIMIT = 50
+
+_DURATION_RE = re.compile(r"^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$")
+
 
 def _extract_video_id(url_or_id: str) -> str:
     patterns = [
@@ -22,6 +27,14 @@ def _extract_video_id(url_or_id: str) -> str:
         if match:
             return match.group(1)
     raise ValueError(f"Could not extract video ID from: {url_or_id}")
+
+
+def _parse_duration_seconds(duration: str) -> int:
+    match = _DURATION_RE.match(duration)
+    if not match:
+        raise ValueError(f"Could not parse ISO 8601 duration: {duration}")
+    hours, minutes, seconds = (int(g) if g else 0 for g in match.groups())
+    return hours * 3600 + minutes * 60 + seconds
 
 
 class YouTubeSource:
@@ -56,15 +69,29 @@ class YouTubeSource:
     def fetch_recent(self, channel_cfg: ChannelConfig, max_items: int) -> list[ContentItem]:
         channel_id = self._resolve_channel_id(channel_cfg.url)
         uploads_playlist_id = "UU" + channel_id[2:]
-        data = self._api_get(
+        playlist_data = self._api_get(
             "playlistItems",
-            {"part": "snippet", "playlistId": uploads_playlist_id, "maxResults": max_items},
+            {"part": "snippet", "playlistId": uploads_playlist_id, "maxResults": PLAYLIST_FETCH_LIMIT},
         )
+        raw_entries = playlist_data.get("items", [])
+        if not raw_entries:
+            return []
+
+        video_ids = [entry["snippet"]["resourceId"]["videoId"] for entry in raw_entries]
+        videos_data = self._api_get("videos", {"part": "contentDetails", "id": ",".join(video_ids)})
+        durations = {
+            item["id"]: _parse_duration_seconds(item["contentDetails"]["duration"])
+            for item in videos_data.get("items", [])
+        }
 
         items = []
-        for entry in data.get("items", []):
+        for entry in raw_entries:
             snippet = entry["snippet"]
             video_id = snippet["resourceId"]["videoId"]
+            duration = durations.get(video_id)
+            if duration is None or duration <= SHORTS_MAX_DURATION_SECONDS:
+                continue
+
             items.append(
                 ContentItem(
                     id=video_id,
@@ -75,6 +102,9 @@ class YouTubeSource:
                     published_at=datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00")),
                 )
             )
+            if len(items) == max_items:
+                break
+
         return items
 
     def fetch_by_url(self, url_or_id: str) -> ContentItem:
