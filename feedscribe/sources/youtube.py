@@ -5,8 +5,6 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-import feedparser
-
 from feedscribe.config import ChannelConfig
 from feedscribe.models import ContentItem
 from feedscribe.utils import to_snake
@@ -57,20 +55,24 @@ class YouTubeSource:
 
     def fetch_recent(self, channel_cfg: ChannelConfig, max_items: int) -> list[ContentItem]:
         channel_id = self._resolve_channel_id(channel_cfg.url)
-        feed_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
-        feed = feedparser.parse(feed_url)
+        uploads_playlist_id = "UU" + channel_id[2:]
+        data = self._api_get(
+            "playlistItems",
+            {"part": "snippet", "playlistId": uploads_playlist_id, "maxResults": max_items},
+        )
 
         items = []
-        for entry in feed.entries[:max_items]:
-            video_id = entry.yt_videoid
+        for entry in data.get("items", []):
+            snippet = entry["snippet"]
+            video_id = snippet["resourceId"]["videoId"]
             items.append(
                 ContentItem(
                     id=video_id,
-                    title=entry.title,
+                    title=snippet["title"],
                     url=f"https://www.youtube.com/watch?v={video_id}",
                     source="youtube",
                     channel=channel_cfg.name,
-                    published_at=datetime(*entry.published_parsed[:6], tzinfo=timezone.utc),
+                    published_at=datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00")),
                 )
             )
         return items

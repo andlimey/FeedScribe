@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from feedscribe.sources.youtube import YouTubeSource
 from feedscribe.config import ChannelConfig
 
@@ -18,28 +18,33 @@ def source():
     return YouTubeSource(api_key="test-key")
 
 
-def _make_feed_mock():
-    entries = []
-    for video_id, title, date_tuple in [
-        ("abc12345678", "Test Episode One", (2026, 6, 19, 10, 0, 0, 0, 0, 0)),
-        ("def45678901", "Test Episode Two", (2026, 6, 18, 10, 0, 0, 0, 0, 0)),
-        ("ghi78901234", "Test Episode Three", (2026, 6, 17, 10, 0, 0, 0, 0, 0)),
-    ]:
-        e = MagicMock()
-        e.yt_videoid = video_id
-        e.title = title
-        e.published_parsed = date_tuple
-        entries.append(e)
-    feed = MagicMock()
-    feed.entries = entries
-    return feed
+def _make_playlist_items():
+    return {
+        "items": [
+            {
+                "snippet": {
+                    "title": title,
+                    "publishedAt": published_at,
+                    "resourceId": {"videoId": video_id},
+                }
+            }
+            for video_id, title, published_at in [
+                ("abc12345678", "Test Episode One", "2026-06-19T10:00:00Z"),
+                ("def45678901", "Test Episode Two", "2026-06-18T10:00:00Z"),
+                ("ghi78901234", "Test Episode Three", "2026-06-17T10:00:00Z"),
+            ]
+        ]
+    }
 
 
 def test_fetch_recent_returns_content_items(source, channel_cfg):
     with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
-         patch("feedparser.parse", return_value=_make_feed_mock()):
+         patch.object(source, "_api_get", return_value=_make_playlist_items()) as mock_api_get:
         items = source.fetch_recent(channel_cfg, max_items=5)
 
+    mock_api_get.assert_called_once_with(
+        "playlistItems", {"part": "snippet", "playlistId": "UUtest123", "maxResults": 5}
+    )
     assert len(items) == 3
     assert items[0].id == "abc12345678"
     assert items[0].title == "Test Episode One"
@@ -48,14 +53,14 @@ def test_fetch_recent_returns_content_items(source, channel_cfg):
     assert items[0].url == "https://www.youtube.com/watch?v=abc12345678"
 
 
-def test_fetch_recent_respects_max_items(source, channel_cfg):
+def test_fetch_recent_passes_max_items_to_api(source, channel_cfg):
     with patch.object(source, "_resolve_channel_id", return_value="UCtest123"), \
-         patch("feedparser.parse", return_value=_make_feed_mock()):
-        items = source.fetch_recent(channel_cfg, max_items=2)
+         patch.object(source, "_api_get", return_value=_make_playlist_items()) as mock_api_get:
+        source.fetch_recent(channel_cfg, max_items=2)
 
-    assert len(items) == 2
-    assert items[0].id == "abc12345678"
-    assert items[1].id == "def45678901"
+    mock_api_get.assert_called_once_with(
+        "playlistItems", {"part": "snippet", "playlistId": "UUtest123", "maxResults": 2}
+    )
 
 
 def _make_video_snippet(title: str, channel_title: str) -> dict:
