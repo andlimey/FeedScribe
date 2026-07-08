@@ -41,7 +41,7 @@ Add these to `.env` for local use, and as GitHub repository secrets for the work
 
 ## Configuration
 
-Edit `config.yaml` to control which channels to watch, which LLM models to use, how many videos to process per poll (default: 5), and where state is stored. See [config.yaml](config.yaml) for the full structure.
+Edit `config.yaml` to control which channels to watch, which LLM models to use, how many videos to process per poll (default: 2), and where state is stored. See [config.yaml](config.yaml) for the full structure.
 
 ```yaml
 channels:
@@ -56,7 +56,7 @@ llm:
     - google/gemini-2.5-flash-lite     # fallback ($0.10/1M in)
 
 polling:
-  max_videos_per_poll: 5
+  max_videos_per_poll: 2
 ```
 
 The `models` list is tried in order — if the primary model fails (rate limit, outage, content filter), OpenRouter automatically falls back to the next one. Model IDs follow OpenRouter's `provider/model-name` format; you can swap in any model OpenRouter supports (e.g. `anthropic/claude-opus-4-8`, `openai/gpt-4o`) without any code changes.
