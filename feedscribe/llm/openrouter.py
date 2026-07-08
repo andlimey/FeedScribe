@@ -40,6 +40,8 @@ source: {url}
 ### <Topic 2>
 <notes>
 
+Only use inline code formatting (backticks) for literal code, commands, file paths, or config keys — not for general technical terms, tool/product names, or jargon.
+
 Output only the Markdown document, nothing else.\
 """
 
