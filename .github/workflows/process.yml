@@ -27,6 +27,8 @@ jobs:
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           RESEND_TO_EMAIL: ${{ secrets.RESEND_TO_EMAIL }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          WEBSHARE_PROXY_USERNAME: ${{ secrets.WEBSHARE_PROXY_USERNAME }}
+          WEBSHARE_PROXY_PASSWORD: ${{ secrets.WEBSHARE_PROXY_PASSWORD }}
         run: |
           source .venv/bin/activate
           while IFS= read -r url || [ -n "$url" ]; do

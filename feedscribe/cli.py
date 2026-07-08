@@ -4,6 +4,7 @@ import os
 
 import click
 from dotenv import load_dotenv
+from youtube_transcript_api.proxies import WebshareProxyConfig
 
 from feedscribe.config import AppConfig, load_config
 from feedscribe.llm.openrouter import OpenRouterProvider
@@ -19,7 +20,16 @@ def _build_pipeline(config_path: str = "config.yaml") -> tuple[Pipeline, AppConf
     config = load_config(config_path)
     state = JsonStateStore(config.state.path)
     source = YouTubeSource(api_key=os.environ["YOUTUBE_API_KEY"])
-    transcriber = YouTubeTranscriber()
+
+    proxy_username = os.environ.get("WEBSHARE_PROXY_USERNAME")
+    proxy_password = os.environ.get("WEBSHARE_PROXY_PASSWORD")
+    proxy_config = (
+        WebshareProxyConfig(proxy_username=proxy_username, proxy_password=proxy_password)
+        if proxy_username and proxy_password
+        else None
+    )
+    transcriber = YouTubeTranscriber(proxy_config=proxy_config)
+
     llm = OpenRouterProvider(
         api_key=os.environ["OPENROUTER_API_KEY"],
         models=config.llm.models,
