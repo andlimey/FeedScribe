@@ -16,7 +16,7 @@ notifier:
   provider: email
 
 polling:
-  max_videos_per_poll: 5
+  max_videos_per_poll: 2
 
 state:
   path: .feedscribe/processed.json
