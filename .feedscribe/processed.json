@@ -1,3 +1,32 @@
 {
-  "processed": []
+  "processed": [
+    {
+      "id": "LWpO4w9QPWQ",
+      "url": "https://www.youtube.com/watch?v=LWpO4w9QPWQ",
+      "title": "Dr. Paul Kaplan: A Financial Plan For Your Entire Life | Rational Reminder 417",
+      "channel": "rational_reminder",
+      "processed_at": "2026-07-10T04:57:24.022329+00:00"
+    },
+    {
+      "id": "iD1P4J2HaNg",
+      "url": "https://www.youtube.com/watch?v=iD1P4J2HaNg",
+      "title": "Is VEQT Costing You? (& Other Questions) | Rational Reminder 416",
+      "channel": "rational_reminder",
+      "processed_at": "2026-07-10T04:57:45.842537+00:00"
+    },
+    {
+      "id": "cSIMVYjVF28",
+      "url": "https://www.youtube.com/watch?v=cSIMVYjVF28",
+      "title": "The Pragmatic Engineer AMA",
+      "channel": "pragmatic_engineer",
+      "processed_at": "2026-07-10T04:58:16.955775+00:00"
+    },
+    {
+      "id": "ddHQQtjIOpw",
+      "url": "https://www.youtube.com/watch?v=ddHQQtjIOpw",
+      "title": "How Kent Beck shapes the software engineering industry",
+      "channel": "pragmatic_engineer",
+      "processed_at": "2026-07-10T04:58:35.629314+00:00"
+    }
+  ]
 }
