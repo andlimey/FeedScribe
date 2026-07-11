@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from feedscribe.pipeline import Pipeline
 from feedscribe.models import ContentItem, Transcript, Notes
-from feedscribe.config import AppConfig, ChannelConfig, LLMConfig, NotifierConfig
+from feedscribe.config import AppConfig, ChannelConfig, LLMConfig
 
 
 @pytest.fixture
@@ -40,11 +40,9 @@ def app_config():
             ChannelConfig(
                 url="https://youtube.com/@test",
                 name="test_channel",
-                type="youtube",
             )
         ],
-        llm=LLMConfig(provider="openrouter", models=["google/gemma-4-31b-it:free", "google/gemini-2.5-flash-lite"]),
-        notifier=NotifierConfig(provider="email"),
+        llm=LLMConfig(models=["google/gemma-4-31b-it:free", "google/gemini-2.5-flash-lite"]),
     )
 
 

@@ -11,16 +11,11 @@ def test_load_config(tmp_path):
 channels:
   - url: https://www.youtube.com/@test/videos
     name: test_channel
-    type: youtube
 
 llm:
-  provider: openrouter
   models:
     - google/gemma-4-31b-it:free
     - google/gemini-2.5-flash-lite
-
-notifier:
-  provider: email
 
 polling:
   max_videos_per_poll: 3
@@ -45,11 +40,8 @@ def test_polling_defaults_to_5(tmp_path):
         """
 channels: []
 llm:
-  provider: openrouter
   models:
     - google/gemma-4-31b-it:free
-notifier:
-  provider: email
 """
     )
     config = load_config(str(cfg_file))

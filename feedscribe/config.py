@@ -5,16 +5,10 @@ from pydantic import BaseModel
 class ChannelConfig(BaseModel):
     url: str
     name: str
-    type: str
 
 
 class LLMConfig(BaseModel):
-    provider: str
     models: list[str]
-
-
-class NotifierConfig(BaseModel):
-    provider: str
 
 
 class PollingConfig(BaseModel):
@@ -28,7 +22,6 @@ class StateConfig(BaseModel):
 class AppConfig(BaseModel):
     channels: list[ChannelConfig]
     llm: LLMConfig
-    notifier: NotifierConfig
     polling: PollingConfig = PollingConfig()
     state: StateConfig = StateConfig()
 

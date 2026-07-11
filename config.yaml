@@ -1,19 +1,13 @@
 channels:
   - url: https://www.youtube.com/@rationalreminder/videos
     name: rational_reminder
-    type: youtube
   - url: https://www.youtube.com/@pragmaticengineer/videos
     name: pragmatic_engineer
-    type: youtube
 
 llm:
-  provider: openrouter
   models:
     - google/gemma-4-31b-it:free
     - google/gemini-2.5-flash-lite
-
-notifier:
-  provider: email
 
 polling:
   max_videos_per_poll: 2
