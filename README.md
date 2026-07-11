@@ -47,10 +47,8 @@ Edit `config.yaml` to control which channels to watch, which LLM models to use, 
 channels:
   - url: https://www.youtube.com/@rationalreminder/videos
     name: rational_reminder
-    type: youtube
 
 llm:
-  provider: openrouter
   models:
     - google/gemma-4-31b-it:free       # primary (free tier)
     - google/gemini-2.5-flash-lite     # fallback ($0.10/1M in)
