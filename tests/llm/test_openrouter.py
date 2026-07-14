@@ -30,7 +30,7 @@ def transcript():
     return Transcript(content_id="abc123", text="This is the transcript text.")
 
 
-def _make_openai_mock(markdown: str):
+def _make_openrouter_mock(markdown: str):
     mock_message = MagicMock()
     mock_message.content = markdown
     mock_choice = MagicMock()
@@ -43,7 +43,7 @@ def _make_openai_mock(markdown: str):
 
 
 def test_generate_notes_returns_correct_content_id(item, transcript):
-    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    mock_client = _make_openrouter_mock(SAMPLE_MARKDOWN)
     with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
@@ -52,7 +52,7 @@ def test_generate_notes_returns_correct_content_id(item, transcript):
 
 
 def test_generate_notes_markdown_contains_sections(item, transcript):
-    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    mock_client = _make_openrouter_mock(SAMPLE_MARKDOWN)
     with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
@@ -64,7 +64,7 @@ def test_generate_notes_markdown_contains_sections(item, transcript):
 
 
 def test_generate_notes_filename(item, transcript):
-    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    mock_client = _make_openrouter_mock(SAMPLE_MARKDOWN)
     with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
@@ -73,7 +73,7 @@ def test_generate_notes_filename(item, transcript):
 
 
 def test_generate_notes_passes_models_for_fallback(item, transcript):
-    mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
+    mock_client = _make_openrouter_mock(SAMPLE_MARKDOWN)
     with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         provider.generate_notes(item, transcript)
