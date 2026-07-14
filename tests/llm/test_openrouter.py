@@ -38,13 +38,13 @@ def _make_openai_mock(markdown: str):
     mock_response = MagicMock()
     mock_response.choices = [mock_choice]
     mock_client = MagicMock()
-    mock_client.chat.completions.create.return_value = mock_response
+    mock_client.chat.send.return_value = mock_response
     return mock_client
 
 
 def test_generate_notes_returns_correct_content_id(item, transcript):
     mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+    with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
@@ -53,7 +53,7 @@ def test_generate_notes_returns_correct_content_id(item, transcript):
 
 def test_generate_notes_markdown_contains_sections(item, transcript):
     mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+    with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
@@ -65,7 +65,7 @@ def test_generate_notes_markdown_contains_sections(item, transcript):
 
 def test_generate_notes_filename(item, transcript):
     mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+    with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
@@ -74,12 +74,12 @@ def test_generate_notes_filename(item, transcript):
 
 def test_generate_notes_passes_models_for_fallback(item, transcript):
     mock_client = _make_openai_mock(SAMPLE_MARKDOWN)
-    with patch("feedscribe.llm.openrouter.OpenAI", return_value=mock_client):
+    with patch("feedscribe.llm.openrouter.OpenRouter", return_value=mock_client):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         provider.generate_notes(item, transcript)
 
-    call_kwargs = mock_client.chat.completions.create.call_args.kwargs
-    assert call_kwargs["extra_body"]["models"] == MODELS
+    call_kwargs = mock_client.chat.send.call_args.kwargs
+    assert call_kwargs["models"] == MODELS
 
 
 def test_title_to_snake_basic():

@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openrouter import OpenRouter
 
 from feedscribe.models import ContentItem, Notes, Transcript
 from feedscribe.utils import to_snake
@@ -48,10 +48,7 @@ Output only the Markdown document, nothing else.\
 
 class OpenRouterProvider:
     def __init__(self, api_key: str, models: list[str]) -> None:
-        self._client = OpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=api_key,
-        )
+        self._client = OpenRouter(api_key=api_key)
         self._models = models
 
     def generate_notes(self, item: ContentItem, transcript: Transcript) -> Notes:
@@ -63,10 +60,9 @@ class OpenRouterProvider:
             date=pub_date,
             transcript=transcript.text,
         )
-        response = self._client.chat.completions.create(
-            model=self._models[0],
+        response = self._client.chat.send(
             messages=[{"role": "user", "content": prompt}],
-            extra_body={"models": self._models},
+            models=self._models,
         )
         markdown = response.choices[0].message.content.strip()
         filename = f"{item.channel}_{to_snake(item.title)}.md"
