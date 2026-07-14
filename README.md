@@ -7,7 +7,7 @@ It runs entirely via GitHub Actions: a scheduled poll (Mon/Fri at 1am UTC) and a
 ## How it works
 
 ```
-YouTube RSS → Transcript → OpenRouter LLM → Resend email + .md attachment
+YouTube Data API → Transcript → OpenRouter LLM → Resend email + .md attachment
 ```
 
 State is tracked in a committed JSON file so videos are never processed twice.
@@ -50,8 +50,9 @@ channels:
 
 llm:
   models:
-    - google/gemma-4-31b-it:free       # primary (free tier)
-    - google/gemini-2.5-flash-lite     # fallback ($0.10/1M in)
+    - google/gemma-4-31b-it:free              # primary (free tier)
+    - qwen/qwen3-next-80b-a3b-instruct:free   # secondary (free tier)
+    - google/gemini-2.5-flash-lite            # fallback ($0.10/1M in)
 
 polling:
   max_videos_per_poll: 2

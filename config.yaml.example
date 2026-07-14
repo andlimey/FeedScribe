@@ -7,6 +7,7 @@ channels:
 llm:
   models:
     - google/gemma-4-31b-it:free
+    - qwen/qwen3-next-80b-a3b-instruct:free
     - google/gemini-2.5-flash-lite
 
 polling:
