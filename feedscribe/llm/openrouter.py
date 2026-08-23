@@ -1,7 +1,7 @@
 from openrouter import OpenRouter
 
 from feedscribe.models import ContentItem, Notes, Transcript
-from feedscribe.utils import to_snake
+from feedscribe.utils import channel_display, sanitize_filename
 
 _PROMPT = """\
 You are a research assistant. Generate structured notes from the following YouTube video transcript.
@@ -65,5 +65,5 @@ class OpenRouterProvider:
             models=self._models,
         )
         markdown = response.choices[0].message.content.strip()
-        filename = f"{item.channel}_{to_snake(item.title)}.md"
+        filename = f"{channel_display(item.channel)} - {sanitize_filename(item.title)}.md"
         return Notes(content_id=item.id, filename=filename, markdown=markdown)

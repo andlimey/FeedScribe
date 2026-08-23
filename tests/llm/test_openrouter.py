@@ -6,7 +6,7 @@ import pytest
 
 from feedscribe.llm.openrouter import OpenRouterProvider
 from feedscribe.models import ContentItem, Transcript
-from feedscribe.utils import to_snake
+from feedscribe.utils import sanitize_filename, to_snake
 
 SAMPLE_MARKDOWN = (Path(__file__).parent.parent / "fixtures" / "notes.md").read_text()
 
@@ -69,7 +69,7 @@ def test_generate_notes_filename(item, transcript):
         provider = OpenRouterProvider(api_key="test-key", models=MODELS)
         notes = provider.generate_notes(item, transcript)
 
-    assert notes.filename == "test_channel_why_you_should_index.md"
+    assert notes.filename == "Test Channel - Why You Should Index.md"
 
 
 def test_generate_notes_passes_models_for_fallback(item, transcript):
@@ -92,3 +92,15 @@ def test_title_to_snake_punctuation():
 
 def test_title_to_snake_extra_spaces():
     assert to_snake("  Hello   World  ") == "hello_world"
+
+
+def test_sanitize_filename_keeps_title_as_is():
+    assert sanitize_filename("Bill Bernstein: The Money Decisions") == "Bill Bernstein The Money Decisions"
+
+
+def test_sanitize_filename_strips_forbidden_characters():
+    assert sanitize_filename('Title with "quotes" / slash | pipe') == "Title with quotes  slash  pipe"
+
+
+def test_sanitize_filename_strips_trailing_dot_and_whitespace():
+    assert sanitize_filename("  Trailing dot.  ") == "Trailing dot"

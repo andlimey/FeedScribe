@@ -5,10 +5,7 @@ import resend
 from markdown_it import MarkdownIt
 
 from feedscribe.models import ContentItem, Notes
-
-
-def _channel_display(channel: str) -> str:
-    return channel.replace("_", " ").title()
+from feedscribe.utils import channel_display
 
 
 def _strip_frontmatter(content: str) -> str:
@@ -59,8 +56,7 @@ class EmailNotifier:
         self._to_email = to_email
 
     def send(self, item: ContentItem, notes: Notes) -> None:
-        channel_display = _channel_display(item.channel)
-        subject = f"FeedScribe [{channel_display}]: {item.title}"
+        subject = f"FeedScribe [{channel_display(item.channel)}]: {item.title}"
 
         attachment_content = base64.b64encode(notes.markdown.encode("utf-8")).decode("ascii")
 
